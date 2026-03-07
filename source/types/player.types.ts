@@ -14,6 +14,7 @@ import type {
 	VolumeFineDownAction,
 	ToggleShuffleAction,
 	ToggleRepeatAction,
+	ToggleAutoplayAction,
 	SetQueueAction,
 	AddToQueueAction,
 	RemoveFromQueueAction,
@@ -41,6 +42,7 @@ export interface PlayerState {
 	queuePosition: number;
 	repeat: 'off' | 'all' | 'one';
 	shuffle: boolean;
+	autoplay: boolean;
 	isLoading: boolean;
 	error: string | null;
 	playRequestId: number;
@@ -61,6 +63,7 @@ export type PlayerAction =
 	| VolumeFineDownAction
 	| ToggleShuffleAction
 	| ToggleRepeatAction
+	| ToggleAutoplayAction
 	| SetQueueAction
 	| AddToQueueAction
 	| RemoveFromQueueAction

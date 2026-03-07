@@ -28,4 +28,7 @@ export const ICONS = {
 
 	// Status
 	VOLUME: '♪', // U+266A
+
+	// Autoplay / radio
+	AUTOPLAY: '∞', // U+221E
 } as const;

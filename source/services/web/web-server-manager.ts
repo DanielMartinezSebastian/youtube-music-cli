@@ -26,6 +26,7 @@ class WebServerManager {
 		queuePosition: 0,
 		repeat: 'off',
 		shuffle: false,
+		autoplay: true,
 		isLoading: false,
 		error: null,
 		playRequestId: 0,

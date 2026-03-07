@@ -60,6 +60,10 @@ export interface ToggleRepeatAction {
 	readonly category: 'TOGGLE_REPEAT';
 }
 
+export interface ToggleAutoplayAction {
+	readonly category: 'TOGGLE_AUTOPLAY';
+}
+
 export interface SetQueueAction {
 	readonly category: 'SET_QUEUE';
 	queue: Track[];
@@ -117,6 +121,7 @@ export interface RestoreStateAction {
 	volume: number;
 	shuffle: boolean;
 	repeat: 'off' | 'all' | 'one';
+	autoplay?: boolean;
 }
 
 export interface SetSpeedAction {

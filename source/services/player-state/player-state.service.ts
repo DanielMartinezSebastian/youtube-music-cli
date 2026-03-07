@@ -18,6 +18,7 @@ export interface PersistedPlayerState {
 	volume: number;
 	shuffle: boolean;
 	repeat: 'off' | 'all' | 'one';
+	autoplay?: boolean;
 	lastUpdated: string; // ISO timestamp
 }
 
@@ -30,6 +31,7 @@ const defaultState: PersistedPlayerState = {
 	volume: 70,
 	shuffle: false,
 	repeat: 'off',
+	autoplay: true,
 	lastUpdated: new Date().toISOString(),
 };
 

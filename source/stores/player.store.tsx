@@ -32,6 +32,7 @@ const initialState: PlayerState = {
 	queuePosition: 0,
 	repeat: 'off',
 	shuffle: false,
+	autoplay: true,
 	isLoading: false,
 	error: null,
 	playRequestId: 0,
@@ -180,6 +181,9 @@ export function playerReducer(
 		case 'TOGGLE_SHUFFLE':
 			return {...state, shuffle: !state.shuffle};
 
+		case 'TOGGLE_AUTOPLAY':
+			return {...state, autoplay: !state.autoplay};
+
 		case 'TOGGLE_REPEAT':
 			const repeatModes: Array<'off' | 'all' | 'one'> = ['off', 'all', 'one'];
 			const currentIndex = repeatModes.indexOf(state.repeat);
@@ -271,6 +275,7 @@ export function playerReducer(
 				volume: action.volume,
 				shuffle: action.shuffle,
 				repeat: action.repeat,
+				autoplay: action.autoplay ?? true,
 				isPlaying: false, // Don't auto-play restored state
 			};
 
@@ -297,6 +302,7 @@ type PlayerContextValue = {
 	volumeFineDown: () => void;
 	toggleShuffle: () => void;
 	toggleRepeat: () => void;
+	toggleAutoplay: () => void;
 	setQueue: (queue: Track[]) => void;
 	addToQueue: (track: Track) => void;
 	removeFromQueue: (index: number) => void;
@@ -680,6 +686,70 @@ function PlayerManager() {
 		dispatch,
 	]);
 
+	// Smart autoplay: fetch suggestions when near end of queue
+	const fetchedForRef = useRef<string | null>(null);
+	const isFetchingAutoplayRef = useRef(false);
+	useEffect(() => {
+		if (!state.autoplay || !state.currentTrack || !state.isPlaying) {
+			return;
+		}
+
+		// Already looping — no need to feed the queue
+		if (state.repeat === 'all' || (state.shuffle && state.queue.length > 1)) {
+			return;
+		}
+
+		// Still enough tracks ahead — wait until we're close to the end
+		const tracksAhead = state.queue.length - state.queuePosition - 1;
+		if (tracksAhead > 5) return;
+
+		// Already fetched for this track or a fetch is in flight
+		if (
+			fetchedForRef.current === state.currentTrack.videoId ||
+			isFetchingAutoplayRef.current
+		) {
+			return;
+		}
+
+		const trackId = state.currentTrack.videoId;
+		const trackTitle = state.currentTrack.title;
+		isFetchingAutoplayRef.current = true;
+		fetchedForRef.current = trackId;
+
+		musicService
+			.getSuggestions(trackId)
+			.then(suggestions => {
+				for (const track of suggestions) {
+					dispatch({category: 'ADD_TO_QUEUE', track});
+				}
+
+				logger.info('PlayerManager', 'Autoplay: added suggestions', {
+					count: suggestions.length,
+					basedOn: trackTitle,
+				});
+			})
+			.catch((error: unknown) => {
+				isFetchingAutoplayRef.current = false;
+				fetchedForRef.current = null; // Allow retry on next track change
+				logger.warn('PlayerManager', 'Autoplay: failed to fetch suggestions', {
+					error: error instanceof Error ? error.message : String(error),
+				});
+			})
+			.finally(() => {
+				isFetchingAutoplayRef.current = false;
+			});
+	}, [
+		state.autoplay,
+		state.currentTrack,
+		state.isPlaying,
+		state.repeat,
+		state.shuffle,
+		state.queue.length,
+		state.queuePosition,
+		musicService,
+		dispatch,
+	]);
+
 	return null;
 }
 
@@ -711,6 +781,7 @@ export function PlayerProvider({children}: {children: ReactNode}) {
 					volume: persistedState.volume,
 					shuffle: persistedState.shuffle,
 					repeat: persistedState.repeat,
+					autoplay: persistedState.autoplay ?? true,
 				});
 			}
 		});
@@ -736,6 +807,7 @@ export function PlayerProvider({children}: {children: ReactNode}) {
 					volume: state.volume,
 					shuffle: state.shuffle,
 					repeat: state.repeat,
+					autoplay: state.autoplay,
 				});
 			},
 			// Debounce progress updates (5s), immediate for track/queue changes
@@ -755,6 +827,7 @@ export function PlayerProvider({children}: {children: ReactNode}) {
 		state.volume,
 		state.shuffle,
 		state.repeat,
+		state.autoplay,
 	]);
 
 	// Save immediately on unmount/quit
@@ -771,6 +844,7 @@ export function PlayerProvider({children}: {children: ReactNode}) {
 				volume: currentState.volume,
 				shuffle: currentState.shuffle,
 				repeat: currentState.repeat,
+				autoplay: currentState.autoplay,
 			});
 		};
 
@@ -848,6 +922,7 @@ export function PlayerProvider({children}: {children: ReactNode}) {
 			},
 			toggleShuffle: () => dispatch({category: 'TOGGLE_SHUFFLE'}),
 			toggleRepeat: () => dispatch({category: 'TOGGLE_REPEAT'}),
+			toggleAutoplay: () => dispatch({category: 'TOGGLE_AUTOPLAY'}),
 			setQueue: (queue: Track[]) => dispatch({category: 'SET_QUEUE', queue}),
 			addToQueue: (track: Track) => dispatch({category: 'ADD_TO_QUEUE', track}),
 			removeFromQueue: (index: number) =>

@@ -98,6 +98,7 @@ export const KEYBINDINGS = {
 	VOLUME_FINE_DOWN: ['shift+-'], // Fine-grained -1 step
 	SHUFFLE: ['shift+s'],
 	REPEAT: ['r'],
+	AUTOPLAY_TOGGLE: ['shift+a'],
 	GAPLESS_TOGGLE: ['shift+g'],
 	CROSSFADE_CYCLE: ['shift+c'],
 	EQUALIZER_CYCLE: ['shift+e'],

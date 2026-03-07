@@ -23,6 +23,7 @@ export default function ShortcutsBar() {
 		volumeFineDown,
 		toggleShuffle,
 		toggleRepeat,
+		toggleAutoplay,
 	} = usePlayer();
 
 	const [flashState, setFlashState] = useState<Record<string, boolean>>({});
@@ -80,6 +81,10 @@ export default function ShortcutsBar() {
 		flash('repeat');
 		toggleRepeat();
 	});
+	useKeyBinding(KEYBINDINGS.AUTOPLAY_TOGGLE, () => {
+		flash('autoplay');
+		toggleAutoplay();
+	});
 	// Note: SETTINGS keybinding handled by MainLayout to avoid double-dispatch
 
 	const shuffleColor = flashState['shuffle']
@@ -97,6 +102,12 @@ export default function ShortcutsBar() {
 	const volumeColor = flashState['volume']
 		? theme.colors.success
 		: theme.colors.primary;
+
+	const autoplayColor = flashState['autoplay']
+		? theme.colors.success
+		: playerState.autoplay
+			? theme.colors.primary
+			: theme.colors.dim;
 
 	return (
 		<Box
@@ -117,7 +128,8 @@ export default function ShortcutsBar() {
 					{playerState.repeat === 'one' ? ICONS.REPEAT_ONE : ICONS.REPEAT_ALL}{' '}
 					[R]
 				</Text>{' '}
-				| <Text color={theme.colors.text}>{ICONS.PLAYLIST} [Shift+P]</Text> |{' '}
+				| <Text color={autoplayColor}>{ICONS.AUTOPLAY} [Shift+A]</Text> |{' '}
+				<Text color={theme.colors.text}>{ICONS.PLAYLIST} [Shift+P]</Text> |{' '}
 				<Text color={theme.colors.text}>{ICONS.DOWNLOAD} [Shift+D]</Text> |{' '}
 				<Text color={theme.colors.text}>{ICONS.SEARCH} [/]</Text> |{' '}
 				<Text color={theme.colors.text}>{ICONS.HELP} [?]</Text> |{' '}
@@ -132,6 +144,7 @@ export default function ShortcutsBar() {
 				<Text color={repeatColor}>
 					{playerState.repeat === 'one' ? ICONS.REPEAT_ONE : ICONS.REPEAT_ALL}
 				</Text>{' '}
+				<Text color={autoplayColor}>{ICONS.AUTOPLAY}</Text>{' '}
 				<Text color={theme.colors.dim}>{ICONS.VOLUME} [+/-]</Text>{' '}
 				<Text color={volumeColor}>{playerState.volume}%</Text>
 			</Text>
