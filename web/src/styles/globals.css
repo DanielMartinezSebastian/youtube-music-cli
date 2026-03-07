@@ -52,3 +52,19 @@ body.light-theme {
 	--color-text-dim: #666666;
 	--color-border: #e0e0e0;
 }
+
+/* Track change animation */
+@keyframes trackFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.track-fade-in {
+	animation: trackFadeIn 0.35s ease forwards;
+}

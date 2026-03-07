@@ -36,6 +36,7 @@ export interface PlayerState {
 	queuePosition: number;
 	repeat: 'off' | 'all' | 'one';
 	shuffle: boolean;
+	autoplay: boolean;
 	isLoading: boolean;
 	error: string | null;
 }
@@ -56,6 +57,7 @@ export interface PlayerAction {
 		| 'VOLUME_FINE_DOWN'
 		| 'TOGGLE_SHUFFLE'
 		| 'TOGGLE_REPEAT'
+		| 'TOGGLE_AUTOPLAY'
 		| 'SET_QUEUE'
 		| 'ADD_TO_QUEUE'
 		| 'REMOVE_FROM_QUEUE'

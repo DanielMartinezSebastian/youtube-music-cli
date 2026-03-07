@@ -30,6 +30,7 @@ export const usePlayerStore = create<PlayerStore>(
 		queuePosition: 0,
 		repeat: 'off',
 		shuffle: false,
+		autoplay: true,
 		isLoading: false,
 		error: null,
 

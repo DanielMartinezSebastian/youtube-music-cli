@@ -3,11 +3,13 @@ interface Props {
 	isLoading: boolean;
 	shuffle: boolean;
 	repeat: 'off' | 'all' | 'one';
+	autoplay: boolean;
 	onPlayPause: () => void;
 	onNext: () => void;
 	onPrevious: () => void;
 	onToggleShuffle: () => void;
 	onToggleRepeat: () => void;
+	onToggleAutoplay: () => void;
 }
 
 export default function PlayerControls({
@@ -15,31 +17,39 @@ export default function PlayerControls({
 	isLoading,
 	shuffle,
 	repeat,
+	autoplay,
 	onPlayPause,
 	onNext,
 	onPrevious,
 	onToggleShuffle,
 	onToggleRepeat,
+	onToggleAutoplay,
 }: Props) {
+	const controlButtonStyle = (active: boolean) => ({
+		padding: '0.75rem',
+		borderRadius: '50%',
+		backgroundColor: active ? 'var(--color-primary)' : 'transparent',
+		color: active ? 'white' : 'var(--color-text-dim)',
+		border: '1px solid transparent',
+		fontSize: '1.125rem',
+		cursor: 'pointer',
+		transition: 'all 0.2s',
+		lineHeight: 1,
+	});
+
 	return (
 		<div
 			style={{
 				display: 'flex',
 				justifyContent: 'center',
 				alignItems: 'center',
-				gap: '1rem',
+				gap: '0.75rem',
 			}}
 		>
 			<button
 				onClick={onToggleShuffle}
-				style={{
-					padding: '0.75rem',
-					borderRadius: '50%',
-					backgroundColor: shuffle ? 'var(--color-primary)' : 'transparent',
-					color: shuffle ? 'white' : 'var(--color-text)',
-					transition: 'all 0.2s',
-				}}
-				title="Shuffle"
+				style={controlButtonStyle(shuffle)}
+				title={shuffle ? 'Shuffle: On' : 'Shuffle: Off'}
 			>
 				🔀
 			</button>
@@ -51,11 +61,14 @@ export default function PlayerControls({
 					borderRadius: '50%',
 					backgroundColor: 'var(--color-bg-secondary)',
 					color: 'var(--color-text)',
+					border: '1px solid var(--color-border)',
+					fontSize: '1.125rem',
+					cursor: 'pointer',
 					transition: 'all 0.2s',
 				}}
 				title="Previous"
 			>
-				⏮️
+				⏮
 			</button>
 
 			<button
@@ -74,10 +87,12 @@ export default function PlayerControls({
 					cursor: isLoading ? 'not-allowed' : 'pointer',
 					opacity: isLoading ? 0.6 : 1,
 					transition: 'all 0.2s',
+					border: 'none',
+					boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
 				}}
 				title={isPlaying ? 'Pause' : 'Play'}
 			>
-				{isLoading ? '⏳' : isPlaying ? '⏸️' : '▶️'}
+				{isLoading ? '⏳' : isPlaying ? '⏸' : '▶'}
 			</button>
 
 			<button
@@ -87,22 +102,20 @@ export default function PlayerControls({
 					borderRadius: '50%',
 					backgroundColor: 'var(--color-bg-secondary)',
 					color: 'var(--color-text)',
+					border: '1px solid var(--color-border)',
+					fontSize: '1.125rem',
+					cursor: 'pointer',
 					transition: 'all 0.2s',
 				}}
 				title="Next"
 			>
-				⏭️
+				⏭
 			</button>
 
 			<button
 				onClick={onToggleRepeat}
 				style={{
-					padding: '0.75rem',
-					borderRadius: '50%',
-					backgroundColor:
-						repeat !== 'off' ? 'var(--color-primary)' : 'transparent',
-					color: repeat !== 'off' ? 'white' : 'var(--color-text)',
-					transition: 'all 0.2s',
+					...controlButtonStyle(repeat !== 'off'),
 					position: 'relative',
 				}}
 				title={`Repeat: ${repeat.toUpperCase()}`}
@@ -112,15 +125,31 @@ export default function PlayerControls({
 					<span
 						style={{
 							position: 'absolute',
-							bottom: '0',
-							right: '0',
-							fontSize: '0.625rem',
+							bottom: '2px',
+							right: '2px',
+							fontSize: '0.55rem',
 							fontWeight: 'bold',
+							backgroundColor: 'var(--color-accent)',
+							color: 'white',
+							borderRadius: '50%',
+							width: '12px',
+							height: '12px',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
 						}}
 					>
 						1
 					</span>
 				)}
+			</button>
+
+			<button
+				onClick={onToggleAutoplay}
+				style={controlButtonStyle(autoplay)}
+				title={autoplay ? 'Autoplay: On (Radio Mode)' : 'Autoplay: Off'}
+			>
+				∞
 			</button>
 		</div>
 	);

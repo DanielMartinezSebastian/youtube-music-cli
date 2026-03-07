@@ -194,6 +194,7 @@ class WebStreamingService {
 			'queuePosition',
 			'repeat',
 			'shuffle',
+			'autoplay',
 			'isLoading',
 			'error',
 		];
@@ -219,10 +220,10 @@ class WebStreamingService {
 	 * Update and broadcast player state (throttled)
 	 */
 	onStateChange(state: PlayerState): void {
-		this.prevState = {...state};
-
 		const now = Date.now();
+		// Compute delta against OLD prevState BEFORE updating it
 		const delta = this.computeDelta(state);
+		this.prevState = {...state};
 
 		// Skip if no changes
 		if (Object.keys(delta).length === 0) {
