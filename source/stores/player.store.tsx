@@ -36,6 +36,7 @@ const initialState: PlayerState = {
 	isLoading: false,
 	error: null,
 	playRequestId: 0,
+	abLoop: {a: null, b: null},
 };
 
 // Get player service instance
@@ -260,6 +261,11 @@ export function playerReducer(
 			return {...state, speed: clampedSpeed};
 		}
 
+		case 'SET_AB_LOOP': {
+			playerService.setABLoop(action.a, action.b);
+			return {...state, abLoop: {a: action.a, b: action.b}};
+		}
+
 		case 'RESTORE_STATE':
 			logger.info('PlayerReducer', 'RESTORE_STATE', {
 				hasTrack: !!action.currentTrack,
@@ -274,6 +280,7 @@ export function playerReducer(
 				repeat: action.repeat,
 				autoplay: action.autoplay ?? true,
 				isPlaying: false, // Don't auto-play restored state
+				abLoop: {a: null, b: null},
 			};
 
 		default:
@@ -308,6 +315,7 @@ type PlayerContextValue = {
 	setSpeed: (speed: number) => void;
 	speedUp: () => void;
 	speedDown: () => void;
+	setABLoop: (a: number | null, b: number | null) => void;
 };
 
 import {getConfigService} from '../services/config/config.service.ts';
@@ -521,6 +529,7 @@ function PlayerManager() {
 						crossfadeDuration: config.get('crossfadeDuration') ?? 0,
 						equalizerPreset: config.get('equalizerPreset') ?? 'flat',
 						volumeFadeDuration: config.get('volumeFadeDuration') ?? 0,
+						duration: track.duration,
 					});
 
 					logger.info('PlayerManager', 'Playback started successfully', {
@@ -943,6 +952,9 @@ export function PlayerProvider({children}: {children: ReactNode}) {
 			},
 			speedDown: () => {
 				dispatch({category: 'SET_SPEED', speed: (state.speed ?? 1.0) - 0.25});
+			},
+			setABLoop: (a: number | null, b: number | null) => {
+				dispatch({category: 'SET_AB_LOOP', a, b});
 			},
 		}),
 		[dispatch, state.speed], // dispatch is stable, but include for correctness

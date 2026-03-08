@@ -46,6 +46,7 @@ export interface PlayerState {
 	isLoading: boolean;
 	error: string | null;
 	playRequestId: number;
+	abLoop: {a: number | null; b: number | null};
 }
 
 export type PlayerAction =
@@ -75,4 +76,5 @@ export type PlayerAction =
 	| SetLoadingAction
 	| SetErrorAction
 	| RestoreStateAction
-	| SetSpeedAction;
+	| SetSpeedAction
+	| import('./actions.ts').SetABLoopAction;

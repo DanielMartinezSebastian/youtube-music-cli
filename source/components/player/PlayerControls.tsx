@@ -9,6 +9,7 @@ import {logger} from '../../services/logger/logger.service.ts';
 import {ICONS} from '../../utils/icons.ts';
 import {getConfigService} from '../../services/config/config.service.ts';
 import type {EqualizerPreset} from '../../types/config.types.ts';
+import {formatTime} from '../../utils/format.ts';
 
 let mountCount = 0;
 
@@ -49,6 +50,7 @@ export default function PlayerControls() {
 		speedUp,
 		speedDown,
 		toggleShuffle,
+		setABLoop,
 	} = usePlayer();
 	const config = getConfigService();
 	const [gaplessPlayback, setGaplessPlayback] = useState(
@@ -100,6 +102,18 @@ export default function PlayerControls() {
 		config.set('equalizerPreset', next);
 	};
 
+	const handleABLoopA = () => {
+		setABLoop(playerState.progress, playerState.abLoop.b);
+	};
+
+	const handleABLoopB = () => {
+		setABLoop(playerState.abLoop.a, playerState.progress);
+	};
+
+	const handleABLoopClear = () => {
+		setABLoop(null, null);
+	};
+
 	// Keyboard bindings
 	useKeyBinding(KEYBINDINGS.PLAY_PAUSE, handlePlayPause);
 	useKeyBinding(KEYBINDINGS.NEXT, next);
@@ -112,6 +126,9 @@ export default function PlayerControls() {
 	useKeyBinding(KEYBINDINGS.GAPLESS_TOGGLE, toggleGaplessPlayback);
 	useKeyBinding(KEYBINDINGS.CROSSFADE_CYCLE, cycleCrossfadeDuration);
 	useKeyBinding(KEYBINDINGS.EQUALIZER_CYCLE, cycleEqualizerPreset);
+	useKeyBinding(KEYBINDINGS.AB_LOOP_A, handleABLoopA);
+	useKeyBinding(KEYBINDINGS.AB_LOOP_B, handleABLoopB);
+	useKeyBinding(KEYBINDINGS.AB_LOOP_CLEAR, handleABLoopClear);
 
 	return (
 		<Box flexDirection="column" gap={1}>
@@ -163,6 +180,20 @@ export default function PlayerControls() {
 					<Text color={theme.colors.accent}>
 						[<Text color={theme.colors.dim}>&lt;&gt;</Text>]{' '}
 						{(playerState.speed ?? 1.0).toFixed(2)}x
+					</Text>
+				)}
+
+				{/* A/B Loop indicator */}
+				{(playerState.abLoop.a !== null || playerState.abLoop.b !== null) && (
+					<Text color={theme.colors.accent}>
+						[<Text color={theme.colors.dim}>| {'{}'}</Text>] A-B:{' '}
+						{playerState.abLoop.a !== null
+							? formatTime(playerState.abLoop.a)
+							: '-'}{' '}
+						-{' '}
+						{playerState.abLoop.b !== null
+							? formatTime(playerState.abLoop.b)
+							: '-'}
 					</Text>
 				)}
 			</Box>

@@ -108,6 +108,9 @@ export const KEYBINDINGS = {
 	SEEK_BACKWARD: ['shift+left'],
 	SPEED_UP: ['>'],
 	SPEED_DOWN: ['<'],
+	AB_LOOP_A: ['{'],
+	AB_LOOP_B: ['}'],
+	AB_LOOP_CLEAR: ['|'],
 
 	// New Views Shortcuts (Optional, we'll map them later if needed)
 	GENRES: ['shift+m'],

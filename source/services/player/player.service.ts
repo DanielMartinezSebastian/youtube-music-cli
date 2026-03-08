@@ -12,6 +12,7 @@ export type PlayOptions = {
 	crossfadeDuration?: number;
 	equalizerPreset?: EqualizerPreset;
 	volumeFadeDuration?: number;
+	duration?: number;
 };
 
 export type MpvArgsOptions = PlayOptions & {
@@ -35,7 +36,10 @@ export function buildMpvArgs(
 
 	if (fadeDuration > 0) {
 		audioFilters.push(`afade=t=in:st=0:d=${fadeDuration}`);
-		audioFilters.push(`afade=t=out:d=${fadeDuration}`);
+		if (options.duration !== undefined && options.duration > 0) {
+			const st = Math.max(0, options.duration - fadeDuration);
+			audioFilters.push(`afade=t=out:st=${st}:d=${fadeDuration}`);
+		}
 	}
 
 	if (crossfadeDuration > 0) {
@@ -596,6 +600,14 @@ class PlayerService {
 		logger.debug('PlayerService', 'setSpeed() called', {speed: clamped});
 		if (this.ipcSocket && !this.ipcSocket.destroyed) {
 			this.sendIpcCommand(['set_property', 'speed', clamped]);
+		}
+	}
+
+	setABLoop(a: number | null, b: number | null): void {
+		logger.debug('PlayerService', 'setABLoop() called', {a, b});
+		if (this.ipcSocket && !this.ipcSocket.destroyed) {
+			this.sendIpcCommand(['set_property', 'ab-loop-a', a !== null ? a : 'no']);
+			this.sendIpcCommand(['set_property', 'ab-loop-b', b !== null ? b : 'no']);
 		}
 	}
 

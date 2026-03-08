@@ -27,6 +27,7 @@ test('player-service-mpv-args: buildMpvArgs adds acrossfade and normalization fi
 		crossfadeDuration: 4,
 		audioNormalization: true,
 		volumeFadeDuration: 2,
+		duration: 300,
 	});
 
 	const filterArg = args.find(arg => arg.startsWith('--af='));

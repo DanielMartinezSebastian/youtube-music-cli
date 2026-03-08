@@ -129,6 +129,12 @@ export interface SetSpeedAction {
 	speed: number;
 }
 
+export interface SetABLoopAction {
+	readonly category: 'SET_AB_LOOP';
+	a: number | null;
+	b: number | null;
+}
+
 // Navigation actions
 export interface NavigateAction {
 	readonly category: 'NAVIGATE';
