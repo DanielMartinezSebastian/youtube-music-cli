@@ -1,3 +1,9 @@
+## [0.0.54](https://github.com/involvex/youtube-music-cli/compare/v0.0.53...v0.0.54) (2026-03-09)
+
+### Bug Fixes
+
+- **player:** resolve play() promise immediately to fix stuck loading state and add state saving lock ([204f6b3](https://github.com/involvex/youtube-music-cli/commit/204f6b344c578770f63fc1ef99bf346e634ff468))
+
 ## [0.0.53](https://github.com/involvex/youtube-music-cli/compare/v0.0.52...v0.0.53) (2026-03-08)
 
 ## [0.0.52](https://github.com/involvex/youtube-music-cli/compare/v0.0.50...v0.0.52) (2026-03-08)
