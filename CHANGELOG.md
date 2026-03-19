@@ -1,3 +1,9 @@
+## [0.0.60](https://github.com/involvex/youtube-music-cli/compare/v0.0.59...v0.0.60) (2026-03-19)
+
+### Features
+
+- Favorites Feature Implementation ([793cb4f](https://github.com/involvex/youtube-music-cli/commit/793cb4fbbded37e0388cdb7f548cac8136fb17a5))
+
 ## [0.0.59](https://github.com/involvex/youtube-music-cli/compare/v0.0.57...v0.0.59) (2026-03-19)
 
 ## [0.0.57](https://github.com/involvex/youtube-music-cli/compare/v0.0.56...v0.0.57) (2026-03-09)
