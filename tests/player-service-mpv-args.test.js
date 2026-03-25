@@ -4,13 +4,12 @@ import {pathToFileURL} from 'node:url';
 
 register('ts-node/esm', pathToFileURL('./'));
 
-const TEST_URL = 'https://www.youtube.com/watch?v=abc123';
 const IPC_PATH = '/tmp/mpv-test';
 
 test('player-service-mpv-args: buildMpvArgs respects the gapless playback toggle', async t => {
 	const {buildMpvArgs} =
 		await import('../source/services/player/player.service.ts');
-	const args = buildMpvArgs(TEST_URL, IPC_PATH, {
+	const args = buildMpvArgs(IPC_PATH, {
 		volume: 55,
 		gaplessPlayback: false,
 	});
@@ -22,7 +21,7 @@ test('player-service-mpv-args: buildMpvArgs respects the gapless playback toggle
 test('player-service-mpv-args: buildMpvArgs adds acrossfade and normalization filters when configured', async t => {
 	const {buildMpvArgs} =
 		await import('../source/services/player/player.service.ts');
-	const args = buildMpvArgs(TEST_URL, IPC_PATH, {
+	const args = buildMpvArgs(IPC_PATH, {
 		volume: 55,
 		crossfadeDuration: 4,
 		audioNormalization: true,

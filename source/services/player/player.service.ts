@@ -187,9 +187,14 @@ class PlayerService {
 					// This ensures mpv is fully ready before we ask it to
 					// resolve a YouTube URL through yt-dlp.
 					if (urlToLoad) {
-						logger.info('PlayerService', 'Loading URL via IPC loadfile', {
-							url: urlToLoad.substring(0, 100),
-						});
+						try {
+							const parsed = new URL(urlToLoad);
+							logger.info('PlayerService', 'Loading URL via IPC loadfile', {
+								url: `${parsed.origin}${parsed.pathname}`,
+							});
+						} catch {
+							logger.info('PlayerService', 'Loading URL via IPC loadfile');
+						}
 						this.sendIpcCommand(['loadfile', urlToLoad]);
 					}
 
@@ -435,7 +440,8 @@ class PlayerService {
 							logger.warn('PlayerService', 'Failed to connect IPC', {
 								error: error.message,
 							});
-							// IPC failed - mpv is idle with no URL loaded
+							// IPC failed - mpv is idle with no URL loaded, clean it up
+							this.stop();
 							handleError(new Error(`IPC connection failed: ${error.message}`));
 						});
 				}, ipcDelay);
