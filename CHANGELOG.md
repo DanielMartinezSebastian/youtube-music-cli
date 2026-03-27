@@ -1,3 +1,10 @@
+## [0.0.62](https://github.com/involvex/youtube-music-cli/compare/v0.0.61...v0.0.62) (2026-03-27)
+
+### Bug Fixes
+
+- address review feedback — tests, orphan cleanup, URL logging ([d3aa441](https://github.com/involvex/youtube-music-cli/commit/d3aa441e5e064b8b525561149fd7ed88e89afff8))
+- use IPC loadfile instead of CLI arg for URL loading ([a0efa22](https://github.com/involvex/youtube-music-cli/commit/a0efa22c650a8cb5d58db46d6baf9aefeb02be0b))
+
 ## [0.0.61](https://github.com/involvex/youtube-music-cli/compare/v0.0.60...v0.0.61) (2026-03-19)
 
 ## [0.0.60](https://github.com/involvex/youtube-music-cli/compare/v0.0.59...v0.0.60) (2026-03-19)
