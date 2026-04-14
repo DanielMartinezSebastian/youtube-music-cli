@@ -172,7 +172,13 @@ function SearchLayout() {
 		}
 	}, [editingFilter, isTyping, dispatch]);
 
+	// Handle escape in search - go to home
+	const goToHome = useCallback(() => {
+		dispatch({category: 'NAVIGATE', view: VIEW.HOME});
+	}, [dispatch]);
+
 	useKeyBinding(KEYBINDINGS.BACK, goBack);
+	useKeyBinding(['escape'], goToHome, {bypassBlock: true});
 
 	const handleMixCreated = useCallback((message: string) => {
 		setActionMessage(message);

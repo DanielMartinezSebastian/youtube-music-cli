@@ -1,11 +1,15 @@
 // Main layout shell
-import {useCallback, useMemo} from 'react';
+import {useCallback, useMemo, useEffect} from 'react';
 import React from 'react';
 import {useNavigation} from '../../hooks/useNavigation.ts';
 import PlaylistList from '../playlist/PlaylistList.tsx';
 import Help from '../common/Help.tsx';
 import {useTheme} from '../../hooks/useTheme.ts';
-import {useKeyBinding} from '../../hooks/useKeyboard.ts';
+import {
+	useKeyBinding,
+	registerGoHomeCallback,
+	setCurrentViewForCtrlC,
+} from '../../hooks/useKeyboard.ts';
 import SearchLayout from './SearchLayout.tsx';
 import PlayerLayout from './PlayerLayout.tsx';
 import MiniPlayerLayout from './MiniPlayerLayout.tsx';
@@ -183,6 +187,20 @@ function MainLayout() {
 	useKeyBinding(KEYBINDINGS.GENRES, goToGenres);
 	useKeyBinding(KEYBINDINGS.DETACH, handleDetach);
 	useKeyBinding(KEYBINDINGS.RESUME_BACKGROUND, handleResumeBackground);
+
+	// Register goHome callback for Ctrl+C handling in search view
+	useEffect(() => {
+		registerGoHomeCallback(goToHome);
+
+		return () => {
+			registerGoHomeCallback(() => {});
+		};
+	}, [goToHome]);
+
+	// Update current view for Ctrl+C handling when navigation changes
+	useEffect(() => {
+		setCurrentViewForCtrlC(navState.currentView);
+	}, [navState.currentView]);
 
 	// Memoize the view component to prevent unnecessary remounts
 	// Only recreate when currentView actually changes

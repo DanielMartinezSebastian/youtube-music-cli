@@ -14,6 +14,26 @@ type RegistryEntry = {
 // Global registry for key handlers
 const registry: Set<RegistryEntry> = new Set();
 
+// Callback to navigate to home (registered by MainLayout)
+let goHomeCallback: (() => void) | null = null;
+
+/**
+ * Register a callback to navigate to home (used for Ctrl+C in certain views)
+ */
+export function registerGoHomeCallback(callback: () => void): void {
+	goHomeCallback = callback;
+}
+
+/**
+ * Function to set the current view for Ctrl+C handling
+ * This should be called by the app to track which view we're in
+ */
+let currentView: string = 'home';
+
+export function setCurrentViewForCtrlC(view: string): void {
+	currentView = view;
+}
+
 /**
  * Hook to bind keyboard shortcuts.
  * This uses a centralized manager to avoid multiple useInput calls and memory leaks.
@@ -88,6 +108,20 @@ export function KeyboardManager() {
 		if (blockCount > 0) {
 			// When keyboard input is blocked (e.g., within a focused text input),
 			// check if any entry has bypassBlock flag and matches this key.
+			// First check for Ctrl+C special case - go to home in search view
+			if (key.ctrl && input === 'c') {
+				if (currentView === 'search') {
+					if (goHomeCallback) {
+						goHomeCallback();
+					}
+
+					return;
+				}
+
+				// In other views, quit the app
+				process.exit(0);
+			}
+
 			for (const entry of registry) {
 				if (entry.bypassBlock) {
 					for (const binding of entry.keys) {
@@ -171,11 +205,6 @@ export function KeyboardManager() {
 				leftArrow: key.leftArrow,
 				rightArrow: key.rightArrow,
 			});
-		}
-
-		// Global quit handling
-		if (key.ctrl && input === 'c') {
-			process.exit(0);
 		}
 
 		// Dispatch to registered handlers
