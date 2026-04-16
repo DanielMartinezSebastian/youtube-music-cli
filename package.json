@@ -35,6 +35,9 @@
 		"ink",
 		"cli-music"
 	],
+	"workspaces": [
+		"web"
+	],
 	"scripts": {
 		"prebuild": "bun run format && bun run lint:fix && bun run typecheck",
 		"build": "bun build source/cli.tsx --outfile dist/source/cli.js --target node --external jiti --footer \"//Copyright (c) 2026 involvex\"",
