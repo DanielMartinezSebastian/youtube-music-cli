@@ -199,6 +199,15 @@ export function KeyboardManager() {
 							})();
 
 						if (isMatch) {
+							logger.debug(
+								'KeyboardManager',
+								'Bypass block: handler triggered',
+								{
+									binding,
+									input,
+									key: {ctrl: key.ctrl, shift: key.shift, meta: key.meta},
+								},
+							);
 							entry.handler();
 							return;
 						}
@@ -208,8 +217,9 @@ export function KeyboardManager() {
 			return;
 		}
 
-		// Debug logging for key presses
+		// Debug logging for key presses - ENHANCED for volume investigation
 		if (input || key.ctrl || key.meta || key.shift) {
+			const isVolumeKey = input === '+' || input === '=' || input === '-';
 			logger.debug('KeyboardManager', 'Key pressed', {
 				input,
 				ctrl: key.ctrl,
@@ -219,6 +229,8 @@ export function KeyboardManager() {
 				downArrow: key.downArrow,
 				leftArrow: key.leftArrow,
 				rightArrow: key.rightArrow,
+				isVolumeKey,
+				blockCount,
 			});
 		}
 
@@ -312,16 +324,19 @@ export function KeyboardManager() {
 					isSymbolMatch ||
 					(inputLower === mainKey && !key.ctrl && !key.meta)
 				) {
-					// Log if this is the volume down binding
-					if (mainKey === '-') {
-						logger.debug('KeyboardManager', 'Volume down handler triggered', {
+					// Enhanced logging for volume keys
+					if (mainKey === '-' || mainKey === '+' || mainKey === '=') {
+						logger.debug('KeyboardManager', 'Volume key handler triggered', {
 							binding,
 							mainKey,
 							input,
 							keyShifts: {ctrl: key.ctrl, meta: key.meta, shift: key.shift},
+							isSymbolMatch,
 							stack: new Error().stack,
+							registrySize: registry.size,
 						});
 					}
+
 					handler();
 					return; // STOP: prevent double-dispatch
 				}

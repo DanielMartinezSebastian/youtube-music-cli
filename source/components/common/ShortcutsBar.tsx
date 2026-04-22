@@ -6,6 +6,7 @@ import {useTheme} from '../../hooks/useTheme.ts';
 import {useKeyBinding} from '../../hooks/useKeyboard.ts';
 import {KEYBINDINGS} from '../../utils/constants.ts';
 import {ICONS} from '../../utils/icons.ts';
+import {logger} from '../../services/logger/logger.service.ts';
 
 const FLASH_DURATION_MS = 300;
 
@@ -59,10 +60,20 @@ export default function ShortcutsBar() {
 	});
 	useKeyBinding(KEYBINDINGS.VOLUME_UP, () => {
 		flash('volume');
+		logger.debug('ShortcutsBar', 'VOLUME_UP handler called', {
+			keys: KEYBINDINGS.VOLUME_UP,
+			isPlaying: playerState.isPlaying,
+			currentVolume: playerState.volume,
+		});
 		volumeUp();
 	});
 	useKeyBinding(KEYBINDINGS.VOLUME_DOWN, () => {
 		flash('volume');
+		logger.debug('ShortcutsBar', 'VOLUME_DOWN handler called', {
+			keys: KEYBINDINGS.VOLUME_DOWN,
+			isPlaying: playerState.isPlaying,
+			currentVolume: playerState.volume,
+		});
 		volumeDown();
 	});
 	useKeyBinding(KEYBINDINGS.VOLUME_FINE_UP, () => {

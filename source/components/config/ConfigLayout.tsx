@@ -6,6 +6,7 @@ import {useKeyBinding} from '../../hooks/useKeyboard.ts';
 import {useNavigation} from '../../hooks/useNavigation.ts';
 import {KEYBINDINGS} from '../../utils/constants.ts';
 import {getConfigService} from '../../services/config/config.service.ts';
+import {logger} from '../../services/logger/logger.service.ts';
 
 type ConfigSection = 'theme' | 'quality' | 'volumeStep';
 type StreamQuality = 'low' | 'medium' | 'high';
@@ -60,6 +61,11 @@ export default function ConfigLayout() {
 		if (selectedSection === 'volumeStep') {
 			const current = config.get('volume') as number;
 			if (current < 100) {
+				logger.debug('ConfigLayout', 'increaseVolumeStep called', {
+					oldVolume: current,
+					newVolume: Math.min(100, current + 10),
+					selectedSection,
+				});
 				config.set('volume', Math.min(100, current + 10));
 			}
 		}
@@ -69,6 +75,11 @@ export default function ConfigLayout() {
 		if (selectedSection === 'volumeStep') {
 			const current = config.get('volume') as number;
 			if (current > 0) {
+				logger.debug('ConfigLayout', 'decreaseVolumeStep called', {
+					oldVolume: current,
+					newVolume: Math.max(0, current - 10),
+					selectedSection,
+				});
 				config.set('volume', Math.max(0, current - 10));
 			}
 		}

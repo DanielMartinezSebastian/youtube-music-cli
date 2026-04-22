@@ -58,11 +58,21 @@ export function playerReducer(
 				playRequestId: state.playRequestId + 1,
 			};
 
-		case 'PAUSE':
+		case 'PAUSE': {
+			logger.debug('PlayerReducer', 'PAUSE action received', {
+				stack: new Error().stack,
+				isPlayingBefore: state.isPlaying,
+			});
 			return {...state, isPlaying: false};
+		}
 
-		case 'RESUME':
+		case 'RESUME': {
+			logger.debug('PlayerReducer', 'RESUME action received', {
+				stack: new Error().stack,
+				isPlayingBefore: state.isPlaying,
+			});
 			return {...state, isPlaying: true};
+		}
 
 		case 'STOP':
 			logger.debug('PlayerReducer', 'STOP action received', {
@@ -119,7 +129,7 @@ export function playerReducer(
 			};
 		}
 
-		case 'PREVIOUS':
+		case 'PREVIOUS': {
 			const prevPosition = state.queuePosition - 1;
 			if (prevPosition < 0) {
 				return state;
@@ -138,6 +148,7 @@ export function playerReducer(
 				progress: 0,
 				playRequestId: state.playRequestId + 1,
 			};
+		}
 
 		case 'SEEK':
 			return {
@@ -189,12 +200,13 @@ export function playerReducer(
 		case 'TOGGLE_AUTOPLAY':
 			return {...state, autoplay: !state.autoplay};
 
-		case 'TOGGLE_REPEAT':
+		case 'TOGGLE_REPEAT': {
 			const repeatModes: Array<'off' | 'all' | 'one'> = ['off', 'all', 'one'];
 			const currentIndex = repeatModes.indexOf(state.repeat);
 			const nextRepeat: 'off' | 'all' | 'one' =
 				repeatModes[(currentIndex + 1) % 3] ?? 'off';
 			return {...state, repeat: nextRepeat};
+		}
 
 		case 'SET_QUEUE':
 			return {
@@ -206,10 +218,11 @@ export function playerReducer(
 		case 'ADD_TO_QUEUE':
 			return {...state, queue: [...state.queue, action.track]};
 
-		case 'REMOVE_FROM_QUEUE':
+		case 'REMOVE_FROM_QUEUE': {
 			const newQueue = [...state.queue];
 			newQueue.splice(action.index, 1);
 			return {...state, queue: newQueue};
+		}
 
 		case 'CLEAR_QUEUE':
 			return {
@@ -231,13 +244,14 @@ export function playerReducer(
 			}
 			return state;
 
-		case 'UPDATE_PROGRESS':
+		case 'UPDATE_PROGRESS': {
 			// Clamp progress to valid range
 			const clampedProgress = Math.max(
 				0,
 				Math.min(action.progress, state.duration || action.progress),
 			);
 			return {...state, progress: clampedProgress};
+		}
 
 		case 'SET_DURATION':
 			return {...state, duration: action.duration};
@@ -355,6 +369,16 @@ function PlayerManager() {
 		const PROGRESS_THROTTLE_MS = 1000; // Update progress max once per second
 
 		playerService.onEvent(event => {
+			// Log all events at debug level to trace volume-pause correlation
+			if (event.paused !== undefined || event.eof !== undefined) {
+				logger.debug('PlayerManager', 'Player event received', {
+					paused: event.paused,
+					eof: event.eof,
+					currentVolume: playerService.getVolume(),
+					isPlaying: playerService.isCurrentlyPlaying(),
+				});
+			}
+
 			if (event.duration !== undefined) {
 				dispatch({category: 'SET_DURATION', duration: event.duration});
 			}
@@ -382,18 +406,19 @@ function PlayerManager() {
 				// Suppress this for ~2s after EOF to prevent it from overwriting
 				// the isPlaying:true set by NEXT, which would block autoplay.
 				if (event.paused && Date.now() - eofTimestampRef.current < 2000) {
+					logger.debug('PlayerManager', 'Pause suppressed (EOF within 2s)', {
+						timeSinceEofMs: Date.now() - eofTimestampRef.current,
+					});
 					return;
 				}
 
 				if (event.paused) {
+					logger.debug('PlayerManager', 'Dispatching PAUSE action from event');
 					dispatch({category: 'PAUSE'});
 				} else {
+					logger.debug('PlayerManager', 'Dispatching RESUME action from event');
 					dispatch({category: 'RESUME'});
 				}
-			}
-
-			if (event.subtitle !== undefined) {
-				dispatch({category: 'SET_SUBTITLE', subtitle: event.subtitle});
 			}
 		});
 	}, [playerService, dispatch, next]);
@@ -819,6 +844,8 @@ export function PlayerProvider({children}: {children: ReactNode}) {
 
 	// Load persisted state on mount
 	useEffect(() => {
+		const config = getConfigService();
+		const defaultVolume = config.get('volume');
 		void loadPlayerState().then(persistedState => {
 			// Mark as initialized after attempting load (even if no saved state)
 			isInitializedRef.current = true;
@@ -831,20 +858,21 @@ export function PlayerProvider({children}: {children: ReactNode}) {
 				});
 
 				// Restore all state atomically with single dispatch
+				// Volume is set separately via PlayerManager; we keep the configured default here
 				dispatch({
 					category: 'RESTORE_STATE',
 					currentTrack: persistedState.currentTrack,
 					queue: persistedState.queue,
 					queuePosition: persistedState.queuePosition,
 					progress: persistedState.progress,
-					volume: state.volume, // Keep initial volume from config
+					volume: defaultVolume,
 					shuffle: persistedState.shuffle,
 					repeat: persistedState.repeat,
 					autoplay: persistedState.autoplay ?? true,
 				});
 			}
 		});
-	}, [state.volume]);
+	}, [dispatch]); // Run only once on mount
 
 	// Save state on changes (debounced for progress updates)
 	useEffect(() => {

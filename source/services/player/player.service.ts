@@ -120,6 +120,7 @@ class PlayerService {
 	private readonly maxIpcRetries = 10;
 	private currentTrackId: string | null = null; // Track currently playing
 	private playSessionId = 0; // Incremented per play() call for unique IPC paths
+	private lastVolumeChangeTimestamp = 0; // For correlating volume changes with pause events
 
 	private constructor() {}
 
@@ -316,24 +317,31 @@ class PlayerService {
 		switch (message.name) {
 			case 'time-pos':
 				event.timePos = message.data as number;
-				logger.debug('PlayerService', 'Time position updated', {
-					timePos: event.timePos,
-				});
 				break;
 
 			case 'duration':
 				event.duration = message.data as number;
-				logger.debug('PlayerService', 'Duration updated', {
-					duration: event.duration,
-				});
 				break;
 
-			case 'pause':
+			case 'pause': {
 				event.paused = message.data as boolean;
+				// Check if this pause occurred shortly after a volume change
+				const timeSinceVolumeChange =
+					Date.now() - this.lastVolumeChangeTimestamp;
+				const isRecentVolumeChange = timeSinceVolumeChange < 1000; // within 1 second
 				logger.debug('PlayerService', 'Pause state changed', {
 					paused: event.paused,
+					currentVolume: this.currentVolume,
+					isPlaying: this.isPlaying,
+					ipcSocketConnected: Boolean(
+						this.ipcSocket && !this.ipcSocket.destroyed,
+					),
+					timeSinceVolumeChangeMs: timeSinceVolumeChange,
+					isRecentVolumeChange,
+					stack: new Error().stack,
 				});
 				break;
+			}
 
 			case 'eof-reached':
 				event.eof = message.data as boolean;
@@ -350,6 +358,30 @@ class PlayerService {
 					event.subtitle = null;
 				}
 				break;
+
+			default:
+				// Log any other property changes for investigation
+				logger.debug('PlayerService', 'Other property change', {
+					property: message.name,
+					data: message.data,
+					currentVolume: this.currentVolume,
+					isPlaying: this.isPlaying,
+				});
+				break;
+		}
+
+		// Log property-change events that aren't explicitly handled above
+		if (
+			message.name !== 'time-pos' &&
+			message.name !== 'duration' &&
+			message.name !== 'pause' &&
+			message.name !== 'eof-reached' &&
+			message.name !== 'sub-text'
+		) {
+			logger.debug('PlayerService', 'Unhandled property change', {
+				property: message.name,
+				data: message.data,
+			});
 		}
 
 		this.eventCallback(event);
@@ -656,12 +688,23 @@ class PlayerService {
 		logger.debug('PlayerService', 'setVolume() called', {
 			oldVolume: this.currentVolume,
 			newVolume: volume,
+			isPlaying: this.isPlaying,
+			ipcSocketConnected: Boolean(this.ipcSocket && !this.ipcSocket.destroyed),
+			stack: new Error().stack,
 		});
 		this.currentVolume = Math.max(0, Math.min(100, volume));
 
+		// Record timestamp for correlation with pause events
+		this.lastVolumeChangeTimestamp = Date.now();
+
 		// Update mpv volume via IPC if connected
 		if (this.ipcSocket && !this.ipcSocket.destroyed) {
-			this.sendIpcCommand(['set_property', 'volume', this.currentVolume]);
+			const command = ['set_property', 'volume', this.currentVolume];
+			logger.debug('PlayerService', 'Sending IPC volume command', {
+				command: command[0],
+				volume: this.currentVolume,
+			});
+			this.sendIpcCommand(command);
 		}
 	}
 
