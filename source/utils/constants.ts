@@ -99,7 +99,7 @@ export const KEYBINDINGS = {
 	RESUME_BACKGROUND: ['shift+r'],
 	AI_CHAT: ['a'],
 	AI_RECOMMENDATIONS: ['shift+a'],
-	STATS_VIEW: ['ctrl+o'],
+	STATS_VIEW: ['o'],
 
 	// Player
 	PLAY_PAUSE: [' '],

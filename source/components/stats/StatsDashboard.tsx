@@ -63,9 +63,7 @@ export default function StatsDashboard() {
 			<ListeningTimeline buckets={stats.listeningByDay} />
 
 			<Box marginTop={1}>
-				<Text color={theme.colors.dim}>
-					Esc to go back • Ctrl+O to reopen stats
-				</Text>
+				<Text color={theme.colors.dim}>Esc to go back • O to reopen stats</Text>
 			</Box>
 		</Box>
 	);
