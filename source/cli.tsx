@@ -37,6 +37,7 @@ const cli = meow(
 	  $ youtube-music-cli search <query>
 	  $ youtube-music-cli playlist <playlist-id>
 	  $ youtube-music-cli suggestions
+	  $ youtube-music-cli radio <track-id>
 	  $ youtube-music-cli pause
 	  $ youtube-music-cli resume
 	  $ youtube-music-cli skip
@@ -417,6 +418,13 @@ if (command === 'plugins') {
 	} else if (command === 'suggestions') {
 		// Show suggestions
 		(cli.flags as Flags).showSuggestions = true;
+	} else if (command === 'radio' && args[0]) {
+		// Start radio from track ID
+		(cli.flags as Flags).radioSeed = {
+			type: 'track',
+			id: args[0],
+			name: args[0],
+		};
 	} else if (command === 'pause') {
 		(cli.flags as Flags).action = 'pause';
 	} else if (command === 'resume') {

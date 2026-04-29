@@ -70,6 +70,7 @@ export const VIEW = {
 	AI_CHAT: 'ai_chat',
 	AI_RECOMMENDATIONS: 'ai_recommendations',
 	STATS: 'stats',
+	RADIO: 'radio',
 } as const;
 
 // Search types
@@ -100,6 +101,9 @@ export const KEYBINDINGS = {
 	AI_CHAT: ['a'],
 	AI_RECOMMENDATIONS: ['shift+a'],
 	STATS_VIEW: ['o'],
+
+	// Radio
+	TOGGLE_RADIO: ['shift+x'],
 
 	// Player
 	PLAY_PAUSE: [' '],

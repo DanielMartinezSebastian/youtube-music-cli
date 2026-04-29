@@ -1,15 +1,18 @@
 // Configuration management service
 import {CONFIG_DIR, CONFIG_FILE} from '../../utils/constants.ts';
-import {mkdirSync, readFileSync, writeFileSync, existsSync} from 'node:fs';
+import {readFileSync, existsSync} from 'node:fs';
+import {writeFile, unlink, rename, mkdir} from 'node:fs/promises';
 import type {Config} from '../../types/config.types.ts';
 import {BUILTIN_THEMES, DEFAULT_THEME} from '../../config/themes.config.ts';
 import type {Theme} from '../../types/theme.types.ts';
+import {formatError} from '../../utils/error.ts';
 import path from 'node:path';
 
 class ConfigService {
 	private configPath: string;
 	private configDir: string;
 	private config: Config;
+	private saveLock = Promise.resolve();
 
 	constructor() {
 		this.configDir = CONFIG_DIR;
@@ -71,15 +74,36 @@ class ConfigService {
 	}
 
 	save(): void {
+		void this.saveAsync();
+	}
+
+	private async saveAsync(): Promise<void> {
+		const currentLock = this.saveLock;
+		let releaseLock: () => void = () => {};
+		const newLock = new Promise<void>(resolve => {
+			releaseLock = resolve;
+		});
+		this.saveLock = newLock;
+
+		await currentLock.catch(() => {});
+
 		try {
-			// Ensure config directory exists
 			if (!existsSync(this.configDir)) {
-				mkdirSync(this.configDir, {recursive: true});
+				await mkdir(this.configDir, {recursive: true});
 			}
 
-			writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+			const tempFile = `${this.configPath}.tmp`;
+			await writeFile(tempFile, JSON.stringify(this.config, null, 2), 'utf8');
+
+			if (process.platform === 'win32' && existsSync(this.configPath)) {
+				await unlink(this.configPath);
+			}
+
+			await rename(tempFile, this.configPath);
 		} catch (error) {
-			console.error('Failed to save config:', error);
+			console.error('Failed to save config:', formatError(error));
+		} finally {
+			releaseLock();
 		}
 	}
 

@@ -5,7 +5,9 @@ import type {
 	PermissionStatus,
 } from '../../types/plugin.types.ts';
 import {CONFIG_DIR} from '../../utils/constants.ts';
-import {mkdirSync, readFileSync, writeFileSync, existsSync} from 'node:fs';
+import {readFileSync, existsSync} from 'node:fs';
+import {writeFile, unlink, rename, mkdir} from 'node:fs/promises';
+import {formatErrorData} from '../../utils/error.ts';
 import {logger} from '../logger/logger.service.ts';
 import {join} from 'node:path';
 
@@ -15,15 +17,12 @@ interface PluginPermissionsStore {
 	[pluginId: string]: PluginPermissions;
 }
 
-/**
- * Plugin permissions service - manages permission grants and denials
- */
 class PluginPermissionsService {
 	private permissions: PluginPermissionsStore;
 	private permissionsPath: string;
 	private configDir: string;
+	private saveLock = Promise.resolve();
 
-	// Permission request callback (can be overridden for testing or custom UI)
 	public onPermissionRequest?: (
 		pluginId: string,
 		permission: PluginPermission,
@@ -35,9 +34,6 @@ class PluginPermissionsService {
 		this.permissions = this.load();
 	}
 
-	/**
-	 * Load permissions from disk
-	 */
 	private load(): PluginPermissionsStore {
 		try {
 			if (!existsSync(this.permissionsPath)) {
@@ -50,39 +46,55 @@ class PluginPermissionsService {
 			logger.error(
 				'PluginPermissionsService',
 				'Failed to load permissions:',
-				error,
+				formatErrorData(error),
 			);
 			return {};
 		}
 	}
 
-	/**
-	 * Save permissions to disk
-	 */
 	private save(): void {
+		void this.saveAsync();
+	}
+
+	private async saveAsync(): Promise<void> {
+		const currentLock = this.saveLock;
+		let releaseLock: () => void = () => {};
+		const newLock = new Promise<void>(resolve => {
+			releaseLock = resolve;
+		});
+		this.saveLock = newLock;
+
+		await currentLock.catch(() => {});
+
 		try {
-			// Ensure config directory exists
 			if (!existsSync(this.configDir)) {
-				mkdirSync(this.configDir, {recursive: true});
+				await mkdir(this.configDir, {recursive: true});
 			}
 
-			writeFileSync(
-				this.permissionsPath,
+			const tempFile = `${this.permissionsPath}.tmp`;
+			await writeFile(
+				tempFile,
 				JSON.stringify(this.permissions, null, 2),
+				'utf8',
 			);
+
+			if (process.platform === 'win32' && existsSync(this.permissionsPath)) {
+				await unlink(this.permissionsPath);
+			}
+
+			await rename(tempFile, this.permissionsPath);
 			logger.debug('PluginPermissionsService', 'Saved permissions to disk');
 		} catch (error) {
 			logger.error(
 				'PluginPermissionsService',
 				'Failed to save permissions:',
-				error,
+				formatErrorData(error),
 			);
+		} finally {
+			releaseLock();
 		}
 	}
 
-	/**
-	 * Check if a plugin has a specific permission
-	 */
 	hasPermission(pluginId: string, permission: PluginPermission): boolean {
 		const pluginPerms = this.permissions[pluginId];
 		if (!pluginPerms) {
@@ -92,9 +104,6 @@ class PluginPermissionsService {
 		return pluginPerms[permission] === 'granted';
 	}
 
-	/**
-	 * Get permission status
-	 */
 	getPermissionStatus(
 		pluginId: string,
 		permission: PluginPermission,
@@ -107,16 +116,10 @@ class PluginPermissionsService {
 		return pluginPerms[permission];
 	}
 
-	/**
-	 * Get all permissions for a plugin
-	 */
 	getPermissions(pluginId: string): PluginPermissions {
 		return this.permissions[pluginId] || {};
 	}
 
-	/**
-	 * Grant a permission to a plugin
-	 */
 	grantPermission(pluginId: string, permission: PluginPermission): void {
 		if (!this.permissions[pluginId]) {
 			this.permissions[pluginId] = {};
@@ -130,9 +133,6 @@ class PluginPermissionsService {
 		);
 	}
 
-	/**
-	 * Deny a permission to a plugin
-	 */
 	denyPermission(pluginId: string, permission: PluginPermission): void {
 		if (!this.permissions[pluginId]) {
 			this.permissions[pluginId] = {};
@@ -146,16 +146,12 @@ class PluginPermissionsService {
 		);
 	}
 
-	/**
-	 * Request permission from user
-	 */
 	async requestPermission(
 		pluginId: string,
 		permission: PluginPermission,
 	): Promise<boolean> {
 		const currentStatus = this.getPermissionStatus(pluginId, permission);
 
-		// If already granted or denied, return cached result
 		if (currentStatus === 'granted') {
 			return true;
 		}
@@ -164,7 +160,6 @@ class PluginPermissionsService {
 			return false;
 		}
 
-		// Prompt user
 		if (this.onPermissionRequest) {
 			try {
 				const granted = await this.onPermissionRequest(pluginId, permission);
@@ -180,15 +175,13 @@ class PluginPermissionsService {
 				logger.error(
 					'PluginPermissionsService',
 					'Error requesting permission:',
-					error,
+					formatErrorData(error),
 				);
-				// Default to deny on error
 				this.denyPermission(pluginId, permission);
 				return false;
 			}
 		}
 
-		// No callback registered - default to deny for security
 		logger.warn(
 			'PluginPermissionsService',
 			`No permission request handler, denying ${permission} for ${pluginId}`,
@@ -197,18 +190,12 @@ class PluginPermissionsService {
 		return false;
 	}
 
-	/**
-	 * Grant multiple permissions at once
-	 */
 	grantPermissions(pluginId: string, permissions: PluginPermission[]): void {
 		for (const permission of permissions) {
 			this.grantPermission(pluginId, permission);
 		}
 	}
 
-	/**
-	 * Revoke a permission
-	 */
 	revokePermission(pluginId: string, permission: PluginPermission): void {
 		if (!this.permissions[pluginId]) {
 			return;
@@ -222,9 +209,6 @@ class PluginPermissionsService {
 		);
 	}
 
-	/**
-	 * Revoke all permissions for a plugin
-	 */
 	revokeAllPermissions(pluginId: string): void {
 		delete this.permissions[pluginId];
 		this.save();
@@ -234,16 +218,10 @@ class PluginPermissionsService {
 		);
 	}
 
-	/**
-	 * Get all plugin IDs with permissions
-	 */
 	getAllPluginIds(): string[] {
 		return Object.keys(this.permissions);
 	}
 
-	/**
-	 * Reset all permissions (for testing or user request)
-	 */
 	resetAll(): void {
 		this.permissions = {};
 		this.save();
@@ -251,12 +229,8 @@ class PluginPermissionsService {
 	}
 }
 
-// Singleton instance
 let instance: PluginPermissionsService | null = null;
 
-/**
- * Get the plugin permissions service singleton
- */
 export function getPluginPermissionsService(): PluginPermissionsService {
 	if (!instance) {
 		instance = new PluginPermissionsService();
@@ -264,9 +238,6 @@ export function getPluginPermissionsService(): PluginPermissionsService {
 	return instance;
 }
 
-/**
- * Reset the singleton (for testing)
- */
 export function resetPluginPermissionsService(): void {
 	instance = null;
 }

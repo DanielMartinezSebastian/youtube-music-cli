@@ -1,6 +1,7 @@
 // Plugin installer service - handles plugin installation from various sources
 import type {PluginInstallResult} from '../../types/plugin.types.ts';
 import {CONFIG_DIR} from '../../utils/constants.ts';
+import {formatErrorData} from '../../utils/error.ts';
 import {logger} from '../logger/logger.service.ts';
 import {join} from 'node:path';
 import {existsSync, mkdirSync, rmSync, cpSync} from 'node:fs';
@@ -52,7 +53,11 @@ class PluginInstallerService {
 					windowsHide: true,
 				});
 			} catch (error) {
-				logger.error('PluginInstallerService', 'Git clone failed:', error);
+				logger.error(
+					'PluginInstallerService',
+					'Git clone failed:',
+					formatErrorData(error),
+				);
 				return {
 					success: false,
 					error: `Failed to clone repository: ${error instanceof Error ? error.message : String(error)}`,
@@ -87,7 +92,7 @@ class PluginInstallerService {
 					logger.error(
 						'PluginInstallerService',
 						'Failed to install dependencies:',
-						error,
+						formatErrorData(error),
 					);
 					// Continue anyway - plugin might still work
 				}
@@ -104,7 +109,11 @@ class PluginInstallerService {
 				message: `Plugin ${pluginName} installed successfully`,
 			};
 		} catch (error) {
-			logger.error('PluginInstallerService', 'Install failed:', error);
+			logger.error(
+				'PluginInstallerService',
+				'Install failed:',
+				formatErrorData(error),
+			);
 			return {
 				success: false,
 				error: `Installation failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -181,7 +190,7 @@ class PluginInstallerService {
 					logger.warn(
 						'PluginInstallerService',
 						'Failed to install dependencies:',
-						error,
+						formatErrorData(error),
 					);
 				}
 			}
@@ -192,7 +201,11 @@ class PluginInstallerService {
 				message: `Plugin ${pluginName} installed successfully`,
 			};
 		} catch (error) {
-			logger.error('PluginInstallerService', 'Install failed:', error);
+			logger.error(
+				'PluginInstallerService',
+				'Install failed:',
+				formatErrorData(error),
+			);
 			return {
 				success: false,
 				error: `Installation failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -249,7 +262,11 @@ class PluginInstallerService {
 				message: `Plugin ${manifest.name} installed from local path`,
 			};
 		} catch (error) {
-			logger.error('PluginInstallerService', 'Install failed:', error);
+			logger.error(
+				'PluginInstallerService',
+				'Install failed:',
+				formatErrorData(error),
+			);
 			return {
 				success: false,
 				error: `Installation failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -278,7 +295,11 @@ class PluginInstallerService {
 				message: `Plugin ${pluginId} uninstalled successfully`,
 			};
 		} catch (error) {
-			logger.error('PluginInstallerService', 'Uninstall failed:', error);
+			logger.error(
+				'PluginInstallerService',
+				'Uninstall failed:',
+				formatErrorData(error),
+			);
 			return {
 				success: false,
 				error: `Uninstall failed: ${error instanceof Error ? error.message : String(error)}`,

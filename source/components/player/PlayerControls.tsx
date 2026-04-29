@@ -52,6 +52,8 @@ export default function PlayerControls() {
 		speedDown,
 		toggleShuffle,
 		setABLoop,
+		startRadio,
+		stopRadio,
 	} = usePlayer();
 	const {toggleFavorite} = useFavorites();
 	const config = getConfigService();
@@ -134,6 +136,17 @@ export default function PlayerControls() {
 		const current = config.get('subtitlesEnabled') ?? false;
 		config.set('subtitlesEnabled', !current);
 	});
+	useKeyBinding(KEYBINDINGS.TOGGLE_RADIO, () => {
+		if (playerState.radioIsActive) {
+			stopRadio();
+		} else if (playerState.currentTrack) {
+			startRadio({
+				type: 'track',
+				id: playerState.currentTrack.videoId,
+				name: playerState.currentTrack.title,
+			});
+		}
+	});
 
 	return (
 		<Box flexDirection="column" gap={1}>
@@ -202,6 +215,22 @@ export default function PlayerControls() {
 					</Text>
 				)}
 			</Box>
+
+			{/* Radio mode indicator */}
+			{playerState.radioIsActive && (
+				<Box paddingX={2}>
+					<Text color={theme.colors.primary} bold>
+						📡 Radio Mode
+					</Text>
+					{playerState.radioSeed && (
+						<Text color={theme.colors.dim}>
+							{' '}
+							— {playerState.radioSeed.type}: {playerState.radioSeed.name}
+						</Text>
+					)}
+					<Text color={theme.colors.dim}> (Shift+X to toggle)</Text>
+				</Box>
+			)}
 
 			<Box
 				flexDirection="row"

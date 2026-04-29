@@ -32,6 +32,8 @@ class WebServerManager {
 		playRequestId: 0,
 		abLoop: {a: null, b: null},
 		subtitle: null,
+		radioIsActive: false,
+		radioSeed: null,
 	};
 
 	constructor() {

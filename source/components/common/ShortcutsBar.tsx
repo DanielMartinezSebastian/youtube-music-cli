@@ -25,6 +25,8 @@ export default function ShortcutsBar() {
 		toggleShuffle,
 		toggleRepeat,
 		toggleAutoplay,
+		startRadio,
+		stopRadio,
 	} = usePlayer();
 
 	const [flashState, setFlashState] = useState<Record<string, boolean>>({});
@@ -96,6 +98,18 @@ export default function ShortcutsBar() {
 		flash('autoplay');
 		toggleAutoplay();
 	});
+	useKeyBinding(KEYBINDINGS.TOGGLE_RADIO, () => {
+		flash('radio');
+		if (playerState.radioIsActive) {
+			stopRadio();
+		} else if (playerState.currentTrack) {
+			void startRadio({
+				type: 'track',
+				id: playerState.currentTrack.videoId,
+				name: playerState.currentTrack.title,
+			});
+		}
+	});
 	// Note: SETTINGS keybinding handled by MainLayout to avoid double-dispatch
 
 	const shuffleColor = flashState['shuffle']
@@ -120,6 +134,12 @@ export default function ShortcutsBar() {
 			? theme.colors.primary
 			: theme.colors.dim;
 
+	const radioColor = flashState['radio']
+		? theme.colors.success
+		: playerState.radioIsActive
+			? theme.colors.primary
+			: theme.colors.dim;
+
 	return (
 		<Box
 			borderStyle="single"
@@ -140,6 +160,7 @@ export default function ShortcutsBar() {
 					[R]
 				</Text>{' '}
 				• <Text color={autoplayColor}>{ICONS.AUTOPLAY} [Sft+A]</Text> •{' '}
+				<Text color={shortcutColor('radio')}>📡 [Shift+X]</Text> •{' '}
 				<Text color={theme.colors.text}>Releases [Sft+N]</Text> •{' '}
 				<Text color={theme.colors.text}>Genres [Sft+M]</Text> •{' '}
 				<Text color={theme.colors.text}>{ICONS.SEARCH} [/]</Text> •{' '}
@@ -153,6 +174,7 @@ export default function ShortcutsBar() {
 					{playerState.repeat === 'one' ? ICONS.REPEAT_ONE : ICONS.REPEAT_ALL}
 				</Text>{' '}
 				<Text color={autoplayColor}>{ICONS.AUTOPLAY}</Text>{' '}
+				{playerState.radioIsActive && <Text color={radioColor}>📡</Text>}{' '}
 				<Text color={theme.colors.dim}>{ICONS.VOLUME} [+/-]</Text>{' '}
 				<Text color={volumeColor}>{playerState.volume}%</Text>
 			</Text>

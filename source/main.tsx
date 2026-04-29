@@ -28,7 +28,7 @@ import {ChatProvider} from './stores/chat.store.tsx';
 
 function Initializer({flags}: {flags?: Flags}) {
 	const {dispatch} = useNavigation();
-	const {play, dispatch: playerDispatch} = usePlayer();
+	const {play, dispatch: playerDispatch, startRadio} = usePlayer();
 	const {getTrack, getPlaylist} = useYouTubeMusic();
 
 	useKeyBinding(KEYBINDINGS.FAVORITES_VIEW, () => {
@@ -56,6 +56,8 @@ function Initializer({flags}: {flags?: Flags}) {
 
 		if (flags?.showSuggestions) {
 			dispatch({category: 'NAVIGATE', view: VIEW.SUGGESTIONS});
+		} else if (flags?.radioSeed) {
+			void startRadio(flags.radioSeed);
 		} else if (flags?.searchQuery) {
 			dispatch({category: 'NAVIGATE', view: VIEW.SEARCH});
 			dispatch({category: 'SET_SEARCH_QUERY', query: flags.searchQuery});
@@ -100,7 +102,15 @@ function Initializer({flags}: {flags?: Flags}) {
 				);
 			});
 		}
-	}, [flags, dispatch, play, playerDispatch, getTrack, getPlaylist]);
+	}, [
+		flags,
+		dispatch,
+		play,
+		playerDispatch,
+		getTrack,
+		getPlaylist,
+		startRadio,
+	]);
 
 	return null;
 }

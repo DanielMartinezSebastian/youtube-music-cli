@@ -2,6 +2,7 @@
 import {spawn, type ChildProcess} from 'node:child_process';
 import {connect, type Socket} from 'node:net';
 import {logger} from '../logger/logger.service.ts';
+import {formatError, formatErrorData} from '../../utils/error.ts';
 import type {EqualizerPreset} from '../../types/config.types.ts';
 import {getConfigService} from '../config/config.service.ts';
 
@@ -221,7 +222,7 @@ class PlayerService {
 
 				this.ipcSocket.on('error', (err: Error) => {
 					logger.debug('PlayerService', 'IPC socket error', {
-						error: err.message,
+						error: formatError(err),
 						attempt: this.ipcConnectRetries + 1,
 					});
 
@@ -294,7 +295,7 @@ class PlayerService {
 			} catch (err) {
 				logger.debug('PlayerService', 'Failed to parse IPC message', {
 					data: line,
-					error: err instanceof Error ? err.message : String(err),
+					error: formatError(err),
 				});
 			}
 		}
@@ -490,7 +491,7 @@ class PlayerService {
 						})
 						.catch(error => {
 							logger.warn('PlayerService', 'Failed to connect IPC', {
-								error: error.message,
+								error: formatError(error),
 							});
 							// IPC failed - mpv is idle with no URL loaded, clean it up
 							this.stop();
@@ -540,8 +541,7 @@ class PlayerService {
 				// Handle errors — same guard
 				spawnedProcess.on('error', (error: Error) => {
 					logger.error('PlayerService', 'mpv process error', {
-						error: error.message,
-						stack: error.stack,
+						...formatErrorData(error),
 					});
 					if (this.mpvProcess === spawnedProcess) {
 						this.isPlaying = false;
@@ -563,8 +563,7 @@ class PlayerService {
 				logger.info('PlayerService', 'mpv process started successfully');
 			} catch (error) {
 				logger.error('PlayerService', 'Exception in play()', {
-					error: error instanceof Error ? error.message : String(error),
-					stack: error instanceof Error ? error.stack : undefined,
+					...formatErrorData(error),
 				});
 				this.isPlaying = false;
 				reject(error);
@@ -623,7 +622,7 @@ class PlayerService {
 				logger.info('PlayerService', 'mpv process killed');
 			} catch (error) {
 				logger.error('PlayerService', 'Error killing mpv process', {
-					error: error instanceof Error ? error.message : String(error),
+					error: formatError(error),
 				});
 			}
 		}

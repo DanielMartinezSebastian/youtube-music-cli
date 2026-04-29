@@ -20,6 +20,8 @@ import {getDiscordRpcService} from '../services/discord/discord-rpc.service.ts';
 import {getMprisService} from '../services/mpris/mpris.service.ts';
 import {getWebServerManager} from '../services/web/web-server-manager.ts';
 import {getWebStreamingService} from '../services/web/web-streaming.service.ts';
+import {getRadioService} from '../services/radio/radio.service.ts';
+import type {RadioSeed} from '../types/radio.types.ts';
 
 const initialState: PlayerState = {
 	currentTrack: null,
@@ -38,6 +40,8 @@ const initialState: PlayerState = {
 	playRequestId: 0,
 	abLoop: {a: null, b: null},
 	subtitle: null,
+	radioIsActive: false,
+	radioSeed: null,
 };
 
 // Get player service instance
@@ -287,6 +291,21 @@ export function playerReducer(
 		case 'SET_SUBTITLE':
 			return {...state, subtitle: action.subtitle};
 
+		case 'START_RADIO':
+			return {
+				...state,
+				radioIsActive: true,
+				radioSeed: action.seed,
+				autoplay: true,
+			};
+
+		case 'STOP_RADIO':
+			return {
+				...state,
+				radioIsActive: false,
+				radioSeed: null,
+			};
+
 		case 'RESTORE_STATE':
 			logger.info('PlayerReducer', 'RESTORE_STATE', {
 				hasTrack: !!action.currentTrack,
@@ -337,6 +356,8 @@ type PlayerContextValue = {
 	speedUp: () => void;
 	speedDown: () => void;
 	setABLoop: (a: number | null, b: number | null) => void;
+	startRadio: (seed: RadioSeed) => void;
+	stopRadio: () => void;
 };
 
 import {getConfigService} from '../services/config/config.service.ts';
@@ -756,16 +777,16 @@ function PlayerManager() {
 			return;
 		}
 
-		// Already looping — no need to feed the queue
 		if (state.repeat === 'all' || (state.shuffle && state.queue.length > 1)) {
 			return;
 		}
 
-		// Still enough tracks ahead — wait until we're close to the end
+		// In radio mode, fetch more aggressively (when ≤15 tracks ahead)
+		// In regular autoplay, only fetch when ≤5 tracks ahead
+		const tracksAheadThreshold = state.radioIsActive ? 15 : 5;
 		const tracksAhead = state.queue.length - state.queuePosition - 1;
-		if (tracksAhead > 5) return;
+		if (tracksAhead > tracksAheadThreshold) return;
 
-		// Already fetched for this track or a fetch is in flight
 		if (
 			fetchedForRef.current === state.currentTrack.videoId ||
 			isFetchingAutoplayRef.current
@@ -778,17 +799,28 @@ function PlayerManager() {
 		isFetchingAutoplayRef.current = true;
 		fetchedForRef.current = trackId;
 
-		musicService
-			.getSuggestions(trackId)
-			.then(suggestions => {
-				for (const track of suggestions) {
+		const fetchPromise =
+			state.radioIsActive && state.radioSeed
+				? getRadioService().fetchMoreTracks(state.radioSeed)
+				: musicService.getSuggestions(trackId);
+
+		fetchPromise
+			.then(tracks => {
+				for (const track of tracks) {
 					dispatch({category: 'ADD_TO_QUEUE', track});
 				}
 
-				logger.info('PlayerManager', 'Autoplay: added suggestions', {
-					count: suggestions.length,
-					basedOn: trackTitle,
-				});
+				logger.info(
+					state.radioIsActive ? 'Radio' : 'Autoplay',
+					state.radioIsActive
+						? 'Radio: added tracks'
+						: 'Autoplay: added suggestions',
+					{
+						count: tracks.length,
+						basedOn: trackTitle,
+						radioMode: state.radioIsActive,
+					},
+				);
 
 				// Check if we need to advance immediately (if we were stuck at the end)
 				// We check if the queue position was at the end of the *previous* queue length
@@ -812,7 +844,7 @@ function PlayerManager() {
 			})
 			.catch((error: unknown) => {
 				isFetchingAutoplayRef.current = false;
-				fetchedForRef.current = null; // Allow retry on next track change
+				fetchedForRef.current = null;
 				logger.warn('PlayerManager', 'Autoplay: failed to fetch suggestions', {
 					error: error instanceof Error ? error.message : String(error),
 				});
@@ -828,6 +860,8 @@ function PlayerManager() {
 		state.shuffle,
 		state.queue.length,
 		state.queuePosition,
+		state.radioIsActive,
+		state.radioSeed,
 		musicService,
 		dispatch,
 		state.progress,
@@ -1030,6 +1064,12 @@ export function PlayerProvider({children}: {children: ReactNode}) {
 			},
 			setABLoop: (a: number | null, b: number | null) => {
 				dispatch({category: 'SET_AB_LOOP', a, b});
+			},
+			startRadio: (seed: RadioSeed) => {
+				dispatch({category: 'START_RADIO', seed});
+			},
+			stopRadio: () => {
+				dispatch({category: 'STOP_RADIO'});
 			},
 		}),
 		[dispatch, state.speed], // dispatch is stable, but include for correctness

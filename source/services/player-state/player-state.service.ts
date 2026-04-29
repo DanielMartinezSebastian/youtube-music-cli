@@ -3,6 +3,7 @@ import {writeFile, readFile, mkdir} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {CONFIG_DIR} from '../../utils/constants.ts';
+import {formatError, formatErrorData} from '../../utils/error.ts';
 import {logger} from '../logger/logger.service.ts';
 import type {Track} from '../../types/youtube-music.types.ts';
 
@@ -94,8 +95,7 @@ export async function savePlayerState(
 		});
 	} catch (error) {
 		logger.error('PlayerStateService', 'Failed to save player state', {
-			error: error instanceof Error ? error.message : String(error),
-			stack: error instanceof Error ? error.stack : undefined,
+			...formatErrorData(error),
 		});
 	} finally {
 		releaseLock();
@@ -146,8 +146,7 @@ export async function loadPlayerState(): Promise<PersistedPlayerState | null> {
 		return mergedState;
 	} catch (error) {
 		logger.error('PlayerStateService', 'Failed to load player state', {
-			error: error instanceof Error ? error.message : String(error),
-			stack: error instanceof Error ? error.stack : undefined,
+			...formatErrorData(error),
 		});
 		return null;
 	}
@@ -166,7 +165,7 @@ export async function clearPlayerState(): Promise<void> {
 		}
 	} catch (error) {
 		logger.error('PlayerStateService', 'Failed to clear player state', {
-			error: error instanceof Error ? error.message : String(error),
+			error: formatError(error),
 		});
 	}
 }

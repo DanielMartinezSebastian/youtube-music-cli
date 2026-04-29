@@ -125,5 +125,39 @@ export function getToolDefinitions(): ToolDefinition[] {
 				required: [],
 			},
 		},
+		{
+			name: 'start_radio',
+			description:
+				'Start a radio station based on a track, artist, or playlist. Generates an endless queue of related tracks.',
+			parameters: {
+				type: 'object',
+				properties: {
+					seedType: {
+						type: 'string',
+						description: 'Type of seed: track, artist, playlist, or genre',
+					},
+					seedId: {
+						type: 'string',
+						description:
+							'YouTube video ID, channel ID, playlist ID, or genre browse ID',
+					},
+					seedName: {
+						type: 'string',
+						description: 'Display name for the radio seed',
+					},
+				},
+				required: ['seedType', 'seedId', 'seedName'],
+			},
+		},
+		{
+			name: 'stop_radio',
+			description:
+				'Stop the current radio station and return to normal queue mode',
+			parameters: {
+				type: 'object',
+				properties: {},
+				required: [],
+			},
+		},
 	];
 }

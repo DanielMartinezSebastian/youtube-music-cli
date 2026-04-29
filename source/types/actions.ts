@@ -1,5 +1,6 @@
 // Explicit action type definitions
 import type {SearchFilters, Track} from './youtube-music.types.ts';
+import type {RadioSeed} from './radio.types.ts';
 
 export interface PlayAction {
 	readonly category: 'PLAY';
@@ -195,4 +196,17 @@ export interface TogglePlayerModeAction {
 
 export interface DetachAction {
 	readonly category: 'DETACH';
+}
+
+export interface StartRadioAction {
+	readonly category: 'START_RADIO';
+	seed: RadioSeed;
+}
+
+export interface StopRadioAction {
+	readonly category: 'STOP_RADIO';
+}
+
+export interface ToggleRadioAction {
+	readonly category: 'TOGGLE_RADIO';
 }

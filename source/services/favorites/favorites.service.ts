@@ -2,6 +2,7 @@ import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {CONFIG_DIR} from '../../utils/constants.ts';
+import {formatError} from '../../utils/error.ts';
 import {logger} from '../logger/logger.service.ts';
 import type {Track} from '../../types/youtube-music.types.ts';
 
@@ -59,7 +60,7 @@ export async function saveFavorites(tracks: Track[]): Promise<void> {
 		});
 	} catch (error) {
 		logger.error('FavoritesService', 'Failed to save favorites', {
-			error: error instanceof Error ? error.message : String(error),
+			error: formatError(error),
 		});
 	} finally {
 		releaseLock();
@@ -97,7 +98,7 @@ export async function loadFavorites(): Promise<Track[]> {
 		return persisted.tracks;
 	} catch (error) {
 		logger.error('FavoritesService', 'Failed to load favorites', {
-			error: error instanceof Error ? error.message : String(error),
+			error: formatError(error),
 		});
 		return [];
 	}

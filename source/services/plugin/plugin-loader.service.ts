@@ -6,6 +6,7 @@ import type {
 	PluginContext,
 } from '../../types/plugin.types.ts';
 import {logger} from '../logger/logger.service.ts';
+import {formatErrorData} from '../../utils/error.ts';
 import {existsSync, readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {createJiti} from 'jiti';
@@ -84,8 +85,8 @@ class PluginLoaderService {
 		} catch (error) {
 			logger.error(
 				'PluginLoaderService',
-				`Failed to load plugin module:`,
-				error,
+				'Failed to load plugin module:',
+				formatErrorData(error),
 			);
 			throw new Error(
 				`Failed to load plugin from ${pluginEntryPath}: ${error instanceof Error ? error.message : String(error)}`,
@@ -208,7 +209,7 @@ class PluginLoaderService {
 			logger.error(
 				'PluginLoaderService',
 				`Error in ${hook} hook for ${plugin.manifest.name}:`,
-				error,
+				formatErrorData(error),
 			);
 			throw error;
 		}

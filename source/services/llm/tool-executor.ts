@@ -172,6 +172,36 @@ export async function executeTool(
 				return {success: true, data: {favorites: favorites as string[]}};
 			}
 
+			case 'start_radio': {
+				const seedType = String(args['seedType'] || 'track') as
+					| 'track'
+					| 'artist'
+					| 'playlist'
+					| 'genre';
+				const seedId = String(args['seedId'] || '');
+				const seedName = String(args['seedName'] || '');
+				if (!seedId) {
+					return {success: false, error: 'seedId is required'};
+				}
+
+				return {
+					success: true,
+					data: {
+						message: `Radio started from ${seedType}: ${seedName}`,
+						seedType,
+						seedId,
+						seedName,
+					},
+				};
+			}
+
+			case 'stop_radio': {
+				return {
+					success: true,
+					data: {message: 'Radio stopped'},
+				};
+			}
+
 			default: {
 				return {success: false, error: `Unknown tool: ${toolName}`};
 			}

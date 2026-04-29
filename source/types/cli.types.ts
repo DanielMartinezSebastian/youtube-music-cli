@@ -1,4 +1,6 @@
 // CLI flag types
+import type {RadioSeed} from './radio.types.ts';
+
 export interface Flags {
 	help?: boolean;
 	version?: boolean;
@@ -13,6 +15,7 @@ export interface Flags {
 	continue?: boolean;
 	headless?: boolean;
 	action?: 'pause' | 'resume' | 'next' | 'previous';
+	radioSeed?: RadioSeed;
 	// Playlist import flags
 	importSource?: 'spotify' | 'youtube';
 	importUrl?: string;

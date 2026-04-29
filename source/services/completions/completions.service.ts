@@ -5,6 +5,7 @@ const COMMANDS = [
 	'search',
 	'playlist',
 	'suggestions',
+	'radio',
 	'pause',
 	'resume',
 	'skip',

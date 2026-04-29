@@ -2,6 +2,7 @@ import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {CONFIG_DIR} from '../../utils/constants.ts';
+import {formatError} from '../../utils/error.ts';
 import {logger} from '../logger/logger.service.ts';
 import type {
 	HistoryEntry,
@@ -56,7 +57,7 @@ export async function saveHistory(entries: HistoryEntry[]): Promise<void> {
 		});
 	} catch (error) {
 		logger.error('HistoryService', 'Failed to save listening history', {
-			error: error instanceof Error ? error.message : String(error),
+			error: formatError(error),
 		});
 	} finally {
 		releaseLock();
@@ -94,7 +95,7 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
 		return persisted.entries;
 	} catch (error) {
 		logger.error('HistoryService', 'Failed to load listening history', {
-			error: error instanceof Error ? error.message : String(error),
+			error: formatError(error),
 		});
 		return [];
 	}
@@ -108,7 +109,7 @@ export async function clearHistory(): Promise<void> {
 		}
 	} catch (error) {
 		logger.error('HistoryService', 'Failed to clear listening history', {
-			error: error instanceof Error ? error.message : String(error),
+			error: formatError(error),
 		});
 	}
 }
