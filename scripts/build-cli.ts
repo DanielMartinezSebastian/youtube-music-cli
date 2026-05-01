@@ -33,11 +33,17 @@ const outfile = path.join(rootDir, 'dist', outputName);
 const banner = '//Copyright (c) 2026 involvex';
 const iconPath = path.join(rootDir, 'assets', 'icon.ico');
 
+const isArm64 = process.arch === 'arm64' || process.arch === 'aarch64';
+
 const platformTarget = isWindows
 	? 'bun-windows-x64'
 	: process.platform === 'darwin'
-		? 'bun-darwin-x64'
-		: 'bun-linux-x64';
+		? isArm64
+			? 'bun-darwin-arm64'
+			: 'bun-darwin-x64'
+		: isArm64
+			? 'bun-linux-arm64'
+			: 'bun-linux-x64';
 
 const compileOptions = isWindows
 	? {
