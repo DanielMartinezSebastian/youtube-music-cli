@@ -22,9 +22,11 @@ jobs:
         run: bun install
       - name: Build
         run: bun run build
-      - name: Compile
-        run: bun run compile
-      - name: Compile Windows
+      - name: Compile Linux x64
+        run: bun build source/cli.tsx --compile --target=bun-linux-x64 --outfile dist/youtube-music-cli-linux-x64
+      - name: Compile Linux arm64
+        run: bun build source/cli.tsx --compile --target=bun-linux-arm64 --outfile dist/youtube-music-cli-linux-arm64
+      - name: Compile Windows x64
         run: bun build source/cli.tsx --compile --target=bun-windows-x64 --outfile dist/youtube-music-cli.exe
       - name: Extract Latest Changelog
         run: |
@@ -38,6 +40,7 @@ jobs:
         if: github.ref_type == 'tag'
         with:
           files: |
-            dist/youtube-music-cli
+            dist/youtube-music-cli-linux-x64
+            dist/youtube-music-cli-linux-arm64
             dist/youtube-music-cli.exe
           body_path: latest-release.md
